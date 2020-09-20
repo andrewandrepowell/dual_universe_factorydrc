@@ -204,14 +204,16 @@ Design = {
   
   Transfer = {
   
-    new = function(ingredient, name) 
-      assert(isinstance(ingredient, Item.new()))
+    new = function(ingredient, name)
+      if ingredient~=nil then
+        assert(isinstance(ingredient, Item.new()))
+      end
       if name~=nil then
         assert(type(name)=="string")
       end
       return {
         name       = name or "no_name",
-        ingredient = ingredient,
+        ingredient = ingredient or false,
         input      = false,
         output     = false
       }
@@ -313,6 +315,7 @@ Design = {
   check = function(design)
     assert(isinstance(design, Design.new()))  
     for _, node in pairs(design.nodes) do
+      -- Perform Industry-specific operations.
       if isinstance(node, Design.Industry.new()) then
         -- Check and make sure the Industry is getting all of its ingredients.
         for _, ingredient_amount in pairs(node.ingredient.ingredients) do
@@ -332,6 +335,9 @@ Design = {
         for _, input in pairs(node.inputs) do
           assert(input~=node.output, "production that produces " .. node.ingredient.name .. " has an input the same as its output")
         end
+      -- Perform Transfer-specific operations.
+      elseif isinstance(node, Design.Transfer.new()) then
+        assert(hasvalue(node.input.ingredients, node.ingredient), "input of node " .. node.name .. " doesn't have " .. node.ingredient.name)
       end
     end
   end,
@@ -422,6 +428,7 @@ basic_standard_frame_s = Item.new("basic_standard_frame_s")
 transfer_unit = Item.new("transfer_unit")
 basic_standard_frame_l = Item.new("basic_standard_frame_l")
 basic_robotic_arm_l = Item.new("basic_robotic_arm_l")
+pure_oxygen = Item.new("pure_oxygen")
 
 
 basic_robotic_arm_l.ingredients = {
