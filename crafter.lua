@@ -417,7 +417,7 @@ atmospheric_engine_m = Item.new("atmospheric_engine_m")
 basic_injector = Item.new("basic_injector")
 _3d_printer_m = Item.new("3d_printer_m")
 basic_combustion_chamber_m = Item.new("basic_combustion_chamber_m")
-adjustor_m = Item.new("adjustor_s")
+adjustor_m = Item.new("adjustor_m")
 container_s = Item.new("container_s")
 basic_hydraulics = Item.new("basic_hydraulics")
 container_m = Item.new("container_m")
@@ -429,10 +429,23 @@ transfer_unit = Item.new("transfer_unit")
 basic_standard_frame_l = Item.new("basic_standard_frame_l")
 basic_robotic_arm_l = Item.new("basic_robotic_arm_l")
 pure_oxygen = Item.new("pure_oxygen")
+stabilizer_m = Item.new("stabilizer_m")
+basic_gaz_cylinder_s = Item.new("basic_gaz_cylinder_s")
 
+basic_gaz_cylinder_s.ingredients = {
+  {silumin, 7}, {basic_screw, 5}}
+basic_gaz_cylinder_s.produced = 1
+basic_gaz_cylinder_s.production_list = {metalwork_industry_m}
+
+stabilizer_m.ingredients = {
+  {basic_screw, 36}, {basic_hydraulics, 25},
+  {basic_mobile_panel_m, 1}, {basic_reinforced_frame_m, 1}}
+stabilizer_m.produced = 1
+stabilizer_m.production_list = {assembly_line_m}
 
 basic_robotic_arm_l.ingredients = {
   {silumin, 343}, {basic_component, 125}}
+basic_robotic_arm_l.produced = 1
 basic_robotic_arm_l.production_list = {metalwork_industry_m}
 
 basic_standard_frame_l.ingredients = {
