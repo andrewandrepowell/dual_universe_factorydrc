@@ -39,25 +39,24 @@ local function smelter_subdesign(design, container_input, container_output, name
   Design.connect(design, i_al_fe_alloy, container_output)
 end
 
-local function industry_unit_design(industry_m)
+local function atmospheric_engine_m_design()
   local design = Design.new()
-  
-  local i_industry_m = Design.Industry.new(assembly_line_m, industry_m)
-  local i_basic_pipe = Design.Industry.new(metalwork_industry_m, basic_pipe)
-  local i_basic_power_system = Design.Industry.new(electronics_industry_m, basic_power_system)
-  local i_basic_connector = Design.Industry.new(electronics_industry_m, basic_connector)
-  local i_basic_chemical_container_m = Design.Industry.new(metalwork_industry_m, basic_chemical_container_m)
+  local i_industry = Design.Industry.new(assembly_line_m, atmospheric_engine_m)
   local i_basic_screw = Design.Industry.new(metalwork_industry_m, basic_screw)
+  local i_basic_injector = Design.Industry.new(_3d_printer_m, basic_injector)
+  local i_polycarbonate_plastic = Design.Industry.new(chemical_industry_m, polycarbonate_plastic)
+  local i_basic_combustion_chamber_m = Design.Industry.new(metalwork_industry_m, basic_combustion_chamber_m)
+  local i_basic_pipe = Design.Industry.new(metalwork_industry_m, basic_pipe)
   local i_basic_reinforced_frame_m = Design.Industry.new(metalwork_industry_m, basic_reinforced_frame_m)
   
   local c0 = Design.Container.new("c0")
   local c1 = Design.Container.new("c1")
-  local c1 = Design.Container.new("c1")
   local c2 = Design.Container.new("c2")
   local c3 = Design.Container.new("c3")
+  local c4 = Design.Container.new("c4")
+  local c5 = Design.Container.new("c5")
   
-  local t_basic_connector = Design.Transfer.new(basic_connector, "t0")
-  local t_basic_screw = Design.Transfer.new(basic_screw, "t1")
+  local t0 = Design.Transfer.new(basic_screw, "t0")
   
   Design.Container.add_ingredient(c0, bauxite)
   Design.Container.add_ingredient(c0, coal)
@@ -67,27 +66,28 @@ local function industry_unit_design(industry_m)
   refiner_subdesign(design, c0, c3, "refiner")
   smelter_subdesign(design, c3, c2, "smelter")
   
-  Design.connect(design, c1, t_basic_connector)
-  Design.connect(design, t_basic_connector, c2)
-  Design.connect(design, c1, t_basic_screw)
-  Design.connect(design, t_basic_screw, c2)
+  Design.connect(design, c1, t0)
+  Design.connect(design, t0, c4)
   
-  Design.connect(design, c2, i_basic_pipe)
-  Design.connect(design, c2, i_basic_power_system)
-  Design.connect(design, c2, i_basic_connector)
-  Design.connect(design, c2, i_basic_chemical_container_m)
+  Design.connect(design, c3, i_polycarbonate_plastic)
+  
   Design.connect(design, c2, i_basic_screw)
+  Design.connect(design, c2, i_basic_combustion_chamber_m)
+  Design.connect(design, c2, i_basic_pipe)
   Design.connect(design, c2, i_basic_reinforced_frame_m)
   
-  Design.connect(design, i_basic_power_system, c1)
-  Design.connect(design, i_basic_pipe, c1)
-  Design.connect(design, i_basic_connector, c1)
-  Design.connect(design, i_basic_chemical_container_m, c1)
-  Design.connect(design, i_basic_screw, c1)
-  Design.connect(design, i_basic_reinforced_frame_m, c1)
-  Design.connect(design, c1, i_industry_m)
+  Design.connect(design, i_basic_pipe, c4)
+  Design.connect(design, i_polycarbonate_plastic, c4)
+  Design.connect(design, c4, i_basic_injector)
+  Design.connect(design, c4, i_basic_combustion_chamber_m)
   
-  Design.connect(design, i_industry_m, c0)
+  Design.connect(design, i_basic_reinforced_frame_m, c1)
+  Design.connect(design, i_basic_combustion_chamber_m, c1)
+  Design.connect(design, i_basic_screw, c1)
+  Design.connect(design, i_basic_injector, c1)
+  Design.connect(design, c1, i_industry)
+  
+  Design.connect(design, i_industry, c0)
   
   Design.print_ingredients_in_containers(design)
   Design.check(design)
@@ -144,14 +144,86 @@ local function transfer_unit_design()
   Design.check(design)
 end
 
-
-
 transfer_unit_design()
+atmospheric_engine_m_design()
 
-industry_unit_design(refiner_m)
+dump(Item.production_tree(atmospheric_engine_m, true))
+
+--local function industry_unit_design(industry_m)
+--  local design = Design.new()
+--  
+--  local i_industry_m = Design.Industry.new(assembly_line_m, industry_m)
+--  local i_basic_pipe = Design.Industry.new(metalwork_industry_m, basic_pipe)
+--  local i_basic_power_system = Design.Industry.new(electronics_industry_m, basic_power_system)
+--  local i_basic_connector = Design.Industry.new(electronics_industry_m, basic_connector)
+--  local i_basic_chemical_container_m = Design.Industry.new(metalwork_industry_m, basic_chemical_container_m)
+--  local i_basic_screw = Design.Industry.new(metalwork_industry_m, basic_screw)
+--  local i_basic_reinforced_frame_m = Design.Industry.new(metalwork_industry_m, basic_reinforced_frame_m)
+--  local i_basic_burner = Design.Industry.new(metalwork_industry_m, basic_burner)
+--  local i_basic_mobile_panel_m = Design.Industry.new(metalwork_industry_m, basic_mobile_panel_m)
+--  local i_basic_electronics = Design.Industry.new(electronics_industry_m, basic_electronics)
+--  local i_polycarbonate_plastic = Design.Industry.new(chemical_industry_m, polycarbonate_plastic)
+--  local i_basic_component = Design.Industry.new(electronics_industry_m, basic_component)
+--  
+--  local c0 = Design.Container.new("c0")
+--  local c1 = Design.Container.new("c1")
+--  local c2 = Design.Container.new("c2")
+--  local c2a = Design.Container.new("c2a")
+--  local c3 = Design.Container.new("c3")
+--  local c4 = Design.Container.new("c4")
+--  
+--  local t_basic_connector = Design.Transfer.new(basic_connector, "t0")
+--  local t_basic_screw = Design.Transfer.new(basic_screw, "t1")
+--  
+--  Design.Container.add_ingredient(c0, bauxite)
+--  Design.Container.add_ingredient(c0, coal)
+--  Design.Container.add_ingredient(c0, hematite)
+--  Design.Container.add_ingredient(c0, quartz)
+--  
+--  refiner_subdesign(design, c0, c3, "refiner")
+--  smelter_subdesign(design, c3, c2, "smelter")
+--  
+--  Design.connect(design, c1, t_basic_connector)
+--  Design.connect(design, t_basic_connector, c2)
+--  Design.connect(design, c1, t_basic_screw)
+--  Design.connect(design, t_basic_screw, c2)
+--  
+--  Design.connect(design, c2, i_basic_pipe)
+--  Design.connect(design, c2, i_basic_power_system)
+--  Design.connect(design, c2, i_basic_connector)
+--  Design.connect(design, c2, i_basic_chemical_container_m)
+--  Design.connect(design, c2, i_basic_screw)
+--  Design.connect(design, c2, i_basic_reinforced_frame_m)
+--  Design.connect(design, c2, i_basic_burner)
+--  Design.connect(design, c2, i_basic_mobile_panel_m)
+--  Design.connect(design, c2, i_basic_electronics)
+--  Design.connect(design, c2a, i_polycarbonate_plastic)
+--  Design.connect(design, c2a, i_basic_component)
+--  
+--  Design.connect(design, i_polycarbonate_plastic, c4)
+--  Design.connect(design, i_basic_component, c4)
+--  Design.connect(design, c4, i_basic_electronics)
+--  
+--  Design.connect(design, i_basic_power_system, c1)
+--  Design.connect(design, i_basic_pipe, c1)
+--  Design.connect(design, i_basic_connector, c1)
+--  Design.connect(design, i_basic_chemical_container_m, c1)
+--  Design.connect(design, i_basic_screw, c1)
+--  Design.connect(design, i_basic_reinforced_frame_m, c1)
+--  Design.connect(design, i_basic_burner, c1)
+--  Design.connect(design, i_basic_mobile_panel_m, c1)
+--  Design.connect(design, i_basic_electronics, c1)
+--  Design.connect(design, c1, i_industry_m)
+--  
+--  Design.connect(design, i_industry_m, c0)
+--  
+--  Design.print_ingredients_in_containers(design)
+--  Design.check(design)
+--end
+
+--industry_unit_design(refiner_m)
 --industry_unit_design(smelter_m)
---industry_unit_design(metalworks_industry_m)
---industry_unit_design(electronics_industry_m)
+--industry_unit_design(metalwork_industry_m)
 
 -- refiner_m
 -- metalwork_industry_m
