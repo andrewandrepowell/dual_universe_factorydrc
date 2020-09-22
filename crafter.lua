@@ -191,7 +191,9 @@ Design = {
     add_ingredient = function(container, ingredient)
       assert(isinstance(container, Design.Container.new()))
       assert(isinstance(ingredient, Item.new()))
-      container.ingredients[#container.ingredients+1] = ingredient
+      if not hasvalue(container.ingredients, ingredient) then
+        container.ingredients[#container.ingredients+1] = ingredient
+      end
     end,
     
     print_ingredients = function(container)
@@ -200,9 +202,25 @@ Design = {
         print(container.name .. ": ingredient=" .. ingredient.name)
       end
     end,
+    
+    print_inputs = function(container)
+      assert(isinstance(container, Design.Container.new()))
+      for _, input in pairs(container.inputs) do
+        print(container.name .. ": input=" .. input.name)
+      end
+    end,
+    
+    print_outputs = function(container)
+      assert(isinstance(container, Design.Container.new()))
+      for _, output in pairs(container.outputs) do
+        print(container.name .. ": output=" .. output.name)
+      end
+    end
   },
   
   Transfer = {
+  
+    MAX_INPUTS = 4,
   
     new = function(ingredient, name)
       if ingredient~=nil then
@@ -214,8 +232,9 @@ Design = {
       return {
         name       = name or "no_name",
         ingredient = ingredient or false,
-        input      = false,
-        output     = false
+        inputs     = {},
+        output     = false,
+        transfer   = false,
       }
     end,
   
@@ -226,18 +245,10 @@ Design = {
     MAX_INPUTS = 4,
     
     new = function(production, ingredient, name)
-      if ingredient~=nil then
+      if ingredient~=nil or production~=nil then
         assert(isinstance(production, Item.new()))
         assert(isinstance(ingredient, Item.new()))
-        local found = false
-        for _, production0 in pairs(ingredient.production_list) do
-          if production0==production then
-            found = true
-          end
-          if found==false then
-            assert(false, "ingredient not associated with production")
-          end
-        end
+        assert(hasvalue(ingredient.production_list, production), "ingredient not associated with production")
       end
       if name~= nil then
         assert(type(name)=="string")
@@ -284,11 +295,11 @@ Design = {
     elseif isinstance(obj0, Design.Container.new()) and isinstance(obj1, Design.Transfer.new()) then
       -- Verify connections.
       assert(#obj0.outputs<Design.Container.MAX_CONNECTIONS, "obj0 has too many outputs")
-      assert(obj1.input==false, "obj1 has an input set")
-      assert(obj1.input~=obj0, "obj0 is already connected to obj1")
+      assert(#obj1.inputs<Design.Transfer.MAX_INPUTS, "obj1 has too many outputs")
+      assert(not hasvalue(obj0.outputs, obj1), "obj0 is already connected to obj1")
       -- Perform connections.
       obj0.outputs[#obj0.outputs+1] = obj1
-      obj1.input = obj0
+      obj1.inputs[#obj1.inputs+1] = obj0
     -- Transfer connected to Container.
     elseif isinstance(obj0, Design.Transfer.new()) and isinstance(obj1, Design.Container.new()) then
       -- Verify connections.
@@ -337,7 +348,14 @@ Design = {
         end
       -- Perform Transfer-specific operations.
       elseif isinstance(node, Design.Transfer.new()) then
-        assert(hasvalue(node.input.ingredients, node.ingredient), "input of node " .. node.name .. " doesn't have " .. node.ingredient.name)
+        local found = false
+        for _, input in pairs(node.inputs) do
+          if hasvalue(input.ingredients, node.ingredient) then
+            found = true
+            break
+          end
+        end
+        assert(found, "inputs of node " .. node.name .. " don't have " .. node.ingredient.name)
       end
     end
   end,
@@ -430,7 +448,47 @@ basic_standard_frame_l = Item.new("basic_standard_frame_l")
 basic_robotic_arm_l = Item.new("basic_robotic_arm_l")
 pure_oxygen = Item.new("pure_oxygen")
 stabilizer_m = Item.new("stabilizer_m")
+stabilizer_s = Item.new("stabilizer_s")
 basic_gaz_cylinder_s = Item.new("basic_gaz_cylinder_s")
+container_l = Item.new("container_l")
+hover_engine_m = Item.new("hover_engine_m")
+atmospheric_airbrake_m = Item.new("atmospheric_airbrake_m")
+atmospheric_fuel_s = Item.new("atmospheric_fuel_s")
+basic_chemical_container_s = Item.new("basic_chemical_container_s")
+
+basic_chemical_container_s.ingredients = {
+  {silumin, 7}, {basic_screw, 5}}
+basic_chemical_container_s.produced = 1
+basic_chemical_container_s.production_list = {metalwork_industry_m}
+
+atmospheric_fuel_s.ingredients = {
+  {basic_pipe, 6}, {basic_injector, 5},
+  {basic_chemical_container_s, 1}, {basic_standard_frame_s, 1}}
+atmospheric_fuel_s.produced = 1
+atmospheric_fuel_s.production_list = {assembly_line_s}
+
+atmospheric_airbrake_m.ingredients = {
+  {basic_pipe, 6}, {basic_hydraulics, 5}, 
+  {basic_mobile_panel_s, 1}, {basic_standard_frame_s, 1}}
+atmospheric_airbrake_m.produced = 1
+atmospheric_airbrake_m.production_list = {assembly_line_s}
+
+hover_engine_m.ingredients = {
+  {basic_screw, 6}, {basic_injector, 5},
+  {basic_gaz_cylinder_s, 1}, {basic_reinforced_frame_s, 1}}
+hover_engine_m.produced = 1
+hover_engine_m.production_list = {assembly_line_s}
+
+stabilizer_s.ingredients = {
+  {basic_screw, 6}, {basic_hydraulics, 5}, 
+  {basic_mobile_panel_s, 1}, {basic_reinforced_frame_s, 1}}
+stabilizer_s.produced = 1
+stabilizer_s.production_list = {assembly_line_s}
+
+container_l.ingredients = {
+  {basic_component, 432}, {basic_hydraulics, 250}, {basic_reinforced_frame_l, 1}}
+container_l.produced = 1
+container_l.production_list = {assembly_line_l}
 
 basic_gaz_cylinder_s.ingredients = {
   {silumin, 7}, {basic_screw, 5}}
