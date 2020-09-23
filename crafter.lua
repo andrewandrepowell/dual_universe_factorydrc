@@ -455,6 +455,13 @@ hover_engine_m = Item.new("hover_engine_m")
 atmospheric_airbrake_m = Item.new("atmospheric_airbrake_m")
 atmospheric_fuel_s = Item.new("atmospheric_fuel_s")
 basic_chemical_container_s = Item.new("basic_chemical_container_s")
+recycle_m = Item.new("recycle_m")
+
+recycle_m.ingredients = {
+  {basic_pipe, 36}, {basic_burner, 25}, 
+  {basic_mobile_panel_m, 1}, {basic_reinforced_frame_m, 1}}
+recycle_m.produced = 1
+recycle_m.production_list = {assembly_line_m}  
 
 basic_chemical_container_s.ingredients = {
   {silumin, 7}, {basic_screw, 5}}
