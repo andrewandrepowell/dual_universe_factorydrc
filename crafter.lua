@@ -206,16 +206,30 @@ Design = {
     print_inputs = function(container)
       assert(isinstance(container, Design.Container.new()))
       for _, input in pairs(container.inputs) do
-        print(container.name .. ": input=" .. input.name)
+        local msg = container.name .. ": input=" .. input.name
+        if isinstance(input, Design.Industry.new()) then
+          msg = msg .. ", production=" .. input.production.name
+        end
+        print(msg)
       end
     end,
     
     print_outputs = function(container)
       assert(isinstance(container, Design.Container.new()))
       for _, output in pairs(container.outputs) do
-        print(container.name .. ": output=" .. output.name)
+        local msg = container.name .. ": output=" .. output.name
+        if isinstance(output, Design.Industry.new()) then
+          msg = msg .. ", production=" .. output.production.name
+        end
+        print(msg)
       end
-    end
+    end,
+    
+    print = function(container)
+      Design.Container.print_ingredients(container)
+      Design.Container.print_inputs(container)
+      Design.Container.print_outputs(container)
+    end, 
   },
   
   Transfer = {
@@ -274,18 +288,18 @@ Design = {
     -- Container connected to Industry.
     if isinstance(obj0, Design.Container.new()) and isinstance(obj1, Design.Industry.new()) then
       -- Verify connections.
-      assert(#obj0.outputs<Design.Container.MAX_CONNECTIONS, "obj0 has too many outputs")
-      assert(#obj1.inputs<Design.Industry.MAX_INPUTS, "obj1 has too many inputs")
-      assert(not hasvalue(obj0.outputs, obj1), "obj0 is already connected to obj1")
+      assert((#obj0.outputs+#obj0.inputs)<Design.Container.MAX_CONNECTIONS, obj0.name .. " has too many connections")
+      assert(#obj1.inputs<Design.Industry.MAX_INPUTS, obj1.name .. " has too many inputs")
+      assert(not hasvalue(obj0.outputs, obj1), obj0.name .. " is already connected to " .. obj1.name)
       -- Perform connections.
       obj0.outputs[#obj0.outputs+1] = obj1
       obj1.inputs[#obj1.inputs+1] = obj0
     -- Industry connected to Container.
     elseif isinstance(obj0, Design.Industry.new()) and isinstance(obj1, Design.Container.new()) then
       -- Verify connections.
-      assert(obj0.output==false, "obj0 has an output set")
-      assert(#obj1.inputs<Design.Container.MAX_CONNECTIONS, "obj1 has too many inputs")
-      assert(obj0.output~=obj1, "obj0 is already connected to obj1")
+      assert(obj0.output==false, obj0.name .. " has an output set")
+      assert((#obj1.inputs+#obj1.outputs)<Design.Container.MAX_CONNECTIONS, obj1.name .. " has too many connections")
+      assert(obj0.output~=obj1, obj0.name .. " is already connected to " .. obj1.name)
       -- Perform connections.
       obj0.output = obj1
       obj1.inputs[#obj1.inputs+1] = obj0
@@ -294,18 +308,18 @@ Design = {
     -- Container connected to Transfer.
     elseif isinstance(obj0, Design.Container.new()) and isinstance(obj1, Design.Transfer.new()) then
       -- Verify connections.
-      assert(#obj0.outputs<Design.Container.MAX_CONNECTIONS, "obj0 has too many outputs")
-      assert(#obj1.inputs<Design.Transfer.MAX_INPUTS, "obj1 has too many outputs")
-      assert(not hasvalue(obj0.outputs, obj1), "obj0 is already connected to obj1")
+      assert((#obj0.outputs+#obj0.inputs)<Design.Container.MAX_CONNECTIONS, obj0.name .. " has too many connections")
+      assert(#obj1.inputs<Design.Transfer.MAX_INPUTS, obj1.name .. " has too many outputs")
+      assert(not hasvalue(obj0.outputs, obj1), obj0.name .. " is already connected to " .. obj1.name)
       -- Perform connections.
       obj0.outputs[#obj0.outputs+1] = obj1
       obj1.inputs[#obj1.inputs+1] = obj0
     -- Transfer connected to Container.
     elseif isinstance(obj0, Design.Transfer.new()) and isinstance(obj1, Design.Container.new()) then
       -- Verify connections.
-      assert(obj0.output==false, "obj0 has an output set")
-      assert(#obj1.inputs<Design.Container.MAX_CONNECTIONS, "obj1 has too many inputs")
-      assert(obj0.output~=obj1, "obj0 is already connected to obj1")
+      assert(obj0.output==false, obj0.name .. " has an output set")
+      assert((#obj1.inputs+#obj1.outputs)<Design.Container.MAX_CONNECTIONS, obj1.name .. " has too many connections")
+      assert(obj0.output~=obj1, obj0.name .. " is already connected to " .. obj1.name)
       -- Perform connections.
       obj0.output = obj1
       obj1.inputs[#obj1.inputs+1] = obj0
@@ -366,6 +380,48 @@ Design = {
       if isinstance(node, Design.Container.new()) then
         Design.Container.print_ingredients(node)
       end
+    end
+  end,
+  
+  print_containers = function(design)
+    assert(isinstance(design, Design.new()))
+    for _, node in pairs(design.nodes) do
+      if isinstance(node, Design.Container.new()) then
+        Design.Container.print(node)
+      end
+    end
+  end,
+  
+  print_statistics = function(design)
+    assert(isinstance(design, Design.new()))
+    
+    -- Count Containers, Industries, and Transfers.
+    local total_containers = 0
+    local total_industries = 0
+    local total_transfers = 0
+    local industries = {}
+    for _, node in pairs(design.nodes) do
+      if isinstance(node, Design.Container.new()) then
+        total_containers = total_containers+1
+      elseif isinstance(node, Design.Industry.new()) then
+        local industry = node.production
+        if industries[industry]==nil then
+          industries[industry] = 1
+        else
+          industries[industry] = 1+industries[industry]
+        end
+        total_industries = total_industries+1
+      elseif isinstance(node, Design.Transfer.new()) then
+        total_transfers = total_transfers+1
+      end
+    end
+    
+    -- Print out the information.
+    print("container total: " .. total_containers)
+    print("industry total: " .. total_industries)
+    print("transfer total: " .. total_transfers)
+    for industry, total in pairs(industries) do
+      print(industry.name .. " total: " .. total)
     end
   end
 }
@@ -456,6 +512,113 @@ atmospheric_airbrake_m = Item.new("atmospheric_airbrake_m")
 atmospheric_fuel_s = Item.new("atmospheric_fuel_s")
 basic_chemical_container_s = Item.new("basic_chemical_container_s")
 recycle_m = Item.new("recycle_m")
+screen_m = Item.new("screen_m")
+uncommon_component = Item.new("uncommon_component")
+calcium_reinforced_copper = Item.new("calcium_reinforced_copper")
+pure_copper = Item.new("pure_copper")
+malachite = Item.new("malachite")
+pure_calcium = Item.new("pure_calcium")
+uncommon_electronics = Item.new("uncommon_electronics")
+polycalcite_plastic = Item.new("polycalcite_plastic")
+uncommon_screen_xs = Item.new("uncommon_screen_xs")
+basic_led = Item.new("basic_led")
+glass = Item.new("glass")
+uncommon_casing_xs = Item.new("uncommon_casing_xs")
+assembly_line_xs = Item.new("assembly_line_xs")
+uncommon_led = Item.new("uncommon_led")
+advanced_glass = Item.new("advanced_glass")
+pure_sodium = Item.new("pure_sodium")
+glass_furnace_m = Item.new("glass_furnace_m")
+basic_power_transformer_m = Item.new("basic_power_transformer")
+natron = Item.new("natron")
+limestone = Item.new("limestone")
+
+basic_power_transformer_m.ingredients = {
+  {steel, 49}, {basic_component, 25}}
+basic_power_transformer_m.produced = 1
+basic_power_transformer_m.production_list = {electronics_industry_m}
+
+glass_furnace_m.ingredients = {
+  {basic_pipe, 36}, {basic_burner, 25},
+  {basic_power_transformer_m, 1}, 
+  {basic_reinforced_frame_m, 1}}
+glass_furnace_m.produced = 1
+glass_furnace_m.production_list = {assembly_line_m}
+  
+pure_sodium.ingredients = {
+  {natron, 65}}
+pure_sodium.produced = 45
+pure_sodium.production_list = {refiner_m}
+
+advanced_glass.ingredients = {
+  {pure_sodium, 100}, {pure_calcium, 50}, 
+  {pure_silicon, 50}, {pure_oxygen, 50}}
+advanced_glass.produced = 75
+advanced_glass.production_list = {glass_furnace_m}
+  
+uncommon_led.ingredients = {
+  {glass, 5}, {advanced_glass, 5}}
+uncommon_led.produced = 10
+uncommon_led.production_list = {glass_furnace_m}
+
+assembly_line_xs.ingredients = {
+  {basic_screw, 1}, {basic_power_system, 1}, 
+  {basic_mobile_panel_xs, 1}, {basic_reinforced_frame_xs, 1}}
+assembly_line_xs.produced = 1
+assembly_line_xs.production_list = {assembly_line_xs}
+
+uncommon_casing_xs.ingredients = {{polycalcite_plastic, 1}, {polycarbonate_plastic, 1}}
+uncommon_casing_xs.produced = 1
+uncommon_casing_xs.production_list = {_3d_printer_m}
+
+glass.ingredients = {{pure_silicon, 100}, {pure_oxygen, 50}}
+glass.produced = 75
+glass.production_list = {glass_furnace_m}
+
+basic_led.ingredients = {{glass, 10}}
+basic_led.produced = 10
+basic_led.production_list = {glass_furnace_m}
+
+uncommon_screen_xs.ingredients = {
+  {basic_led, 1}, {basic_electronics, 1}, {polycalcite_plastic, 1},
+  {uncommon_led, 1}, {uncommon_electronics, 1}}
+uncommon_screen_xs.produced = 1
+uncommon_screen_xs.production_list = {_3d_printer_m}
+
+polycalcite_plastic.ingredients = {
+  {pure_calcium, 100}, {pure_carbon, 50}, {pure_hydrogen, 50}}
+polycalcite_plastic.produced = 75
+polycalcite_plastic.production_list = {chemical_industry_m}
+
+uncommon_electronics.ingredients = {
+  {polycarbonate_plastic, 2}, {basic_component, 4}, 
+  {polycalcite_plastic, 4}}
+uncommon_electronics.produced = 1
+uncommon_electronics.production_list = {electronics_industry_m}
+
+pure_calcium.ingredients = {{limestone, 65}}
+pure_calcium.produced = 45
+pure_calcium.production_list = {refiner_m}
+
+pure_copper.ingredients = {{malachite, 65}}
+pure_copper.produced = 45
+pure_copper.production_list = {refiner_m}
+
+calcium_reinforced_copper.ingredients = {
+  {pure_copper, 100}, {pure_calcium, 50}}
+calcium_reinforced_copper.produced = 75
+calcium_reinforced_copper.production_list = {smelter_m}
+
+uncommon_component.ingredients = {
+  {al_fe_alloy, 5}, {calcium_reinforced_copper, 5}}
+uncommon_component.produced = 10
+uncommon_component.production_list = {electronics_industry_m}
+
+screen_m.ingredients = {
+  {basic_component, 1}, {uncommon_component, 1}, 
+  {uncommon_electronics, 1}, {uncommon_screen_xs, 1}, {uncommon_casing_xs, 1}}
+screen_m.produced = 1
+screen_m.production_list = {assembly_line_xs}
 
 recycle_m.ingredients = {
   {basic_pipe, 36}, {basic_burner, 25}, 
