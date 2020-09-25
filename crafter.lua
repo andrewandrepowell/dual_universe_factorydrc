@@ -234,7 +234,7 @@ Design = {
   
   Transfer = {
   
-    MAX_INPUTS = 4,
+    MAX_INPUTS = 7,
   
     new = function(ingredient, name)
       if ingredient~=nil then
@@ -256,7 +256,7 @@ Design = {
   
   Industry = {
   
-    MAX_INPUTS = 4,
+    MAX_INPUTS = 7,
     
     new = function(production, ingredient, name)
       if ingredient~=nil or production~=nil then
